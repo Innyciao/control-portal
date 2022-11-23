@@ -21,7 +21,7 @@ const NewChange = () => {
         </p>
       </div>
       <div className=' flex justify-center'>
-        <button onClick={_ => setNext(true)} className='mb-3 bg-primary rounded-full mt-10 px-4 py-1'>Click Here</button>
+        <button onClick={_ => setNext(true)} className='mb-3 bg-primary text-sm rounded-full mt-10 px-4 py-1'>Click Here</button>
       </div>
       <NewChangeModal
         key={`NewChangeModal-${next}`}

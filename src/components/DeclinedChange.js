@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import { DotLoader } from 'react-spinners';
 
-const ApproveChange = () => {
+
+const DeclinedChange = () => {
 
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  var url = `${process.env.REACT_APP_API_HOST}/fetch-approved-change`
+  var url = `${process.env.REACT_APP_API_HOST}/fetch-decline-change`
 
   var heading = [
     'Request ID',
@@ -34,11 +35,11 @@ const ApproveChange = () => {
     loadData()
   }, [url])
 
-
   return (
     <div>
-      <div className='m-3 text-lg font-bold'>Approved Change Request</div>
-      {isLoading
+      <div>
+        <div className='m-3 text-lg font-bold'>Declined Change Request</div>
+        {isLoading
         ?
         <div className='flex justify-center items-center h-96'>
           <DotLoader color="hsla(148, 83%, 53%, 1)" />
@@ -52,7 +53,7 @@ const ApproveChange = () => {
               ))}
             </tr>
           </thead>
-          <tbody className=' text-center text-xs mt-4'>
+          <tbody className=' text-center text-xs ' key={data.guid}>
             {data
               .sort((a, b) => b.changeRequestId > a.changeRequestId ? 1 : -1)
               .map((change) => {
@@ -72,8 +73,9 @@ const ApproveChange = () => {
           </tbody>
         </table>
       }
+      </div>
     </div>
   )
 }
 
-export default ApproveChange
+export default DeclinedChange
