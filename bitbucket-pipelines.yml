@@ -1,0 +1,91 @@
+image: node:14.15
+options:
+  docker: true
+  size: 2x
+definitions:
+  services:
+    docker:
+      memory: 7128 
+  buildImage: &buildImage
+    name: Build and Push Docker Image
+    image: atlassian/pipelines-awscli
+    caches:
+      - docker
+    services:
+      - docker
+    script:
+      - docker build -f Dockerfile -t trove/ccp-frontend .
+      - pipe: atlassian/aws-ecr-push-image:1.1.3
+        variables:
+          IMAGE_NAME: trove/ccp-frontend
+          TAGS: "${BITBUCKET_BRANCH}-${BITBUCKET_BUILD_NUMBER} ${BITBUCKET_BRANCH}-latest latest"
+  unitTests: &unitTests
+    name: Unit tests
+    script:
+      - npm install
+      - CI=true npm test
+  integrationTests: &integrationTests
+    name: Integration test
+    script:
+      - npm install
+      - CI=true npm test
+  startUpMessage: &startUpMessage
+    name: Test and Deploy to Production environment
+    script:
+      - echo 'Getting Started'
+  
+pipelines:
+  branches:
+    master:
+      - step: *startUpMessage
+      - parallel:
+          - step: *unitTests
+          - step: *integrationTests
+      - step: *buildImage
+      - step:
+          name: Deploy to production
+          deployment: production
+          trigger: manual
+          image: atlassian/pipelines-kubectl
+          script:
+            - chmod +x devops/script/deployer.sh
+            - ./devops/script/deployer.sh production
+
+    staging:
+      - step: *startUpMessage
+      - parallel:
+          - step: *unitTests
+          - step: *integrationTests
+      - step: *buildImage
+      - step:
+          name: Deploy to staging
+          deployment: staging
+          trigger: automatic
+          image: atlassian/pipelines-kubectl
+          script:
+            - chmod +x devops/script/deployer.sh
+            - ./devops/script/deployer.sh staging
+    develop:
+      - step: *startUpMessage
+      - parallel:
+          - step: *unitTests
+          - step: *integrationTests
+      - step: *buildImage
+      - step:
+          name: Deploy to test
+          deployment: test
+          trigger: automatic
+          image: atlassian/pipelines-kubectl
+          script:
+            - chmod +x devops/script/deployer.sh
+            - ./devops/script/deployer.sh test
+    feature/*:
+      - step: *startUpMessage
+      - parallel:
+          - step: *unitTests
+          - step: *integrationTests
+    hotfix/*:
+      - step: *startUpMessage
+      - parallel:
+          - step: *unitTests
+          - step: *integrationTests
